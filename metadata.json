@@ -1,0 +1,9 @@
+{
+  "name": "EduAI Suite",
+  "description": "Autonomous Multi-Modal Learning Ecosystem",
+  "requestFramePermissions": [
+    "camera",
+    "microphone"
+  ],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
