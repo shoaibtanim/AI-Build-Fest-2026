@@ -1,0 +1,1099 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EduAI Dashboard</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    background: #0a0a1a;
+    color: #e2e8f0;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: #0d0d2b; }
+  ::-webkit-scrollbar-thumb { background: #4f46e5; border-radius: 4px; }
+
+  .layout { display: flex; min-height: 100vh; }
+
+  /* SIDEBAR */
+  .sidebar {
+    width: 220px;
+    min-height: 100vh;
+    background: #0d0d2b;
+    border-right: 1px solid rgba(99,102,241,0.2);
+    display: flex;
+    flex-direction: column;
+    padding: 1.5rem 0;
+    flex-shrink: 0;
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    overflow-y: auto;
+  }
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 0 1.25rem 1.5rem;
+    font-size: 20px;
+    font-weight: 700;
+    color: #a78bfa;
+    border-bottom: 1px solid rgba(99,102,241,0.15);
+    margin-bottom: 1rem;
+  }
+  .logo-icon {
+    width: 36px; height: 36px;
+    background: linear-gradient(135deg, #7c3aed, #3b82f6);
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px;
+  }
+  .nav-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 0.7rem 1.25rem;
+    color: #94a3b8;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-size: 14px;
+    font-weight: 500;
+    border-left: 3px solid transparent;
+  }
+  .nav-item:hover { color: #c4b5fd; background: rgba(124,58,237,0.1); }
+  .nav-item.active {
+    color: #a78bfa;
+    background: rgba(124,58,237,0.15);
+    border-left-color: #7c3aed;
+  }
+  .nav-icon { font-size: 18px; }
+  .upgrade-card {
+    margin: auto 1rem 0;
+    background: linear-gradient(135deg, rgba(124,58,237,0.3), rgba(59,130,246,0.2));
+    border: 1px solid rgba(124,58,237,0.4);
+    border-radius: 12px;
+    padding: 1rem;
+    text-align: center;
+  }
+  .upgrade-card h4 { color: #c4b5fd; font-size: 13px; margin-bottom: 4px; }
+  .upgrade-card p { color: #64748b; font-size: 11px; margin-bottom: 10px; line-height: 1.4; }
+  .upgrade-btn {
+    background: linear-gradient(135deg, #7c3aed, #3b82f6);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 8px 16px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    width: 100%;
+  }
+
+  /* MAIN */
+  .main { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+
+  /* TOPBAR */
+  .topbar {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem 1.5rem;
+    background: #0d0d2b;
+    border-bottom: 1px solid rgba(99,102,241,0.2);
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+  .search-bar {
+    flex: 1;
+    max-width: 420px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(99,102,241,0.3);
+    border-radius: 10px;
+    padding: 8px 14px;
+    font-size: 13px;
+    color: #64748b;
+  }
+  .topbar-right { display: flex; align-items: center; gap: 12px; margin-left: auto; }
+  .notif-btn {
+    width: 36px; height: 36px;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(99,102,241,0.3);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; color: #94a3b8; font-size: 16px; position: relative;
+  }
+  .notif-dot {
+    width: 8px; height: 8px;
+    background: #f59e0b;
+    border-radius: 50%;
+    position: absolute; top: 4px; right: 4px;
+  }
+  .avatar {
+    width: 36px; height: 36px;
+    background: linear-gradient(135deg, #7c3aed, #3b82f6);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 700; font-size: 13px; color: white;
+    cursor: pointer;
+  }
+
+  /* CONTENT */
+  .content { padding: 1.5rem; flex: 1; overflow-y: auto; }
+
+  /* GREETING */
+  .greeting { margin-bottom: 1.5rem; }
+  .greeting h1 { font-size: 26px; font-weight: 700; color: #f1f5f9; }
+  .greeting p { color: #64748b; font-size: 14px; margin-top: 4px; }
+
+  /* STATS ROW */
+  .stats-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+  }
+  .stat-card {
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(99,102,241,0.2);
+    border-radius: 14px;
+    padding: 1.1rem 1.25rem;
+    position: relative;
+    overflow: hidden;
+  }
+  .stat-card::before {
+    content: '';
+    position: absolute; top: 0; left: 0; right: 0; height: 2px;
+  }
+  .stat-card.blue::before { background: linear-gradient(90deg, #3b82f6, #06b6d4); }
+  .stat-card.purple::before { background: linear-gradient(90deg, #7c3aed, #a855f7); }
+  .stat-card.green::before { background: linear-gradient(90deg, #10b981, #06b6d4); }
+  .stat-card.amber::before { background: linear-gradient(90deg, #f59e0b, #ef4444); }
+  .stat-label { font-size: 12px; color: #64748b; margin-bottom: 6px; font-weight: 500; }
+  .stat-value { font-size: 28px; font-weight: 700; color: #f1f5f9; line-height: 1; margin-bottom: 6px; }
+  .stat-sub { font-size: 11px; color: #10b981; }
+  .stat-icon {
+    position: absolute; top: 1rem; right: 1rem;
+    width: 40px; height: 40px;
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px;
+  }
+  .stat-icon.blue { background: rgba(59,130,246,0.15); color: #3b82f6; }
+  .stat-icon.purple { background: rgba(124,58,237,0.15); color: #a78bfa; }
+  .stat-icon.green { background: rgba(16,185,129,0.15); color: #10b981; }
+
+  /* MIDDLE GRID */
+  .mid-grid {
+    display: grid;
+    grid-template-columns: 1fr 300px;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+  }
+
+  /* AI TUTOR CARD */
+  .ai-tutor-card {
+    background: linear-gradient(135deg, rgba(124,58,237,0.15), rgba(59,130,246,0.1));
+    border: 1px solid rgba(124,58,237,0.35);
+    border-radius: 16px;
+    padding: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    position: relative;
+    overflow: hidden;
+  }
+  .ai-tutor-card::after {
+    content: '';
+    position: absolute; bottom: -20px; right: 100px;
+    width: 120px; height: 120px;
+    background: rgba(124,58,237,0.08);
+    border-radius: 50%;
+  }
+  .ai-tutor-info h2 { font-size: 22px; font-weight: 700; color: #f1f5f9; margin-bottom: 4px; }
+  .ai-badge {
+    display: inline-block;
+    background: rgba(245,158,11,0.2);
+    color: #f59e0b;
+    font-size: 10px;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 20px;
+    margin-left: 8px;
+    vertical-align: middle;
+  }
+  .ai-tutor-info p { color: #94a3b8; font-size: 14px; margin-bottom: 1rem; }
+  .start-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: linear-gradient(135deg, #7c3aed, #3b82f6);
+    color: white;
+    border: none;
+    border-radius: 10px;
+    padding: 10px 20px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .ai-robot {
+    flex-shrink: 0;
+    width: 100px;
+    position: relative;
+  }
+  .robot-body {
+    width: 80px; height: 80px;
+    background: linear-gradient(135deg, #1e1b4b, #312e81);
+    border-radius: 50%;
+    border: 2px solid rgba(124,58,237,0.5);
+    display: flex; align-items: center; justify-content: center;
+    position: relative;
+    animation: float 3s ease-in-out infinite;
+  }
+  .robot-face {
+    width: 50px; height: 40px;
+    background: #0d0d2b;
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    gap: 8px;
+  }
+  .robot-eye {
+    width: 12px; height: 16px;
+    background: linear-gradient(180deg, #06b6d4, #3b82f6);
+    border-radius: 6px;
+    animation: blink 4s ease-in-out infinite;
+  }
+  @keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-8px)} }
+  @keyframes blink { 0%,90%,100%{transform:scaleY(1)} 95%{transform:scaleY(0.1)} }
+  .ai-prompt-chips { display: flex; flex-direction: column; gap: 6px; }
+  .chip {
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(99,102,241,0.3);
+    border-radius: 8px;
+    padding: 6px 12px;
+    font-size: 12px;
+    color: #c4b5fd;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .chip:hover { background: rgba(124,58,237,0.2); border-color: rgba(124,58,237,0.5); }
+
+  /* FOCUS MODE */
+  .focus-card {
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(99,102,241,0.2);
+    border-radius: 16px;
+    padding: 1.25rem;
+  }
+  .focus-card h3 { font-size: 15px; font-weight: 600; color: #f1f5f9; margin-bottom: 4px; }
+  .focus-card p { font-size: 12px; color: #64748b; margin-bottom: 1rem; }
+  .timer-display {
+    font-size: 42px;
+    font-weight: 700;
+    color: #f1f5f9;
+    letter-spacing: 2px;
+    text-align: center;
+    margin: 0.75rem 0;
+    font-variant-numeric: tabular-nums;
+  }
+  .timer-btn {
+    width: 44px; height: 44px;
+    background: linear-gradient(135deg, #7c3aed, #3b82f6);
+    border: none;
+    border-radius: 50%;
+    color: white;
+    font-size: 18px;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    margin: 0 auto;
+  }
+  .timer-progress {
+    width: 100%; height: 4px;
+    background: rgba(255,255,255,0.08);
+    border-radius: 4px;
+    margin: 0.75rem 0;
+    overflow: hidden;
+  }
+  .timer-progress-bar {
+    height: 100%;
+    background: linear-gradient(90deg, #7c3aed, #3b82f6);
+    border-radius: 4px;
+    transition: width 1s linear;
+  }
+  .sound-btns { display: flex; gap: 8px; margin-top: 0.75rem; justify-content: center; }
+  .sound-btn {
+    width: 36px; height: 36px;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(99,102,241,0.25);
+    border-radius: 8px;
+    color: #64748b;
+    cursor: pointer;
+    font-size: 14px;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.2s;
+  }
+  .sound-btn:hover, .sound-btn.active { background: rgba(124,58,237,0.2); color: #a78bfa; border-color: #7c3aed; }
+  .sound-label { font-size: 11px; color: #64748b; text-align: center; margin-top: 6px; }
+
+  /* CONTINUE LEARNING */
+  .section-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem; }
+  .section-title { font-size: 17px; font-weight: 600; color: #f1f5f9; }
+  .view-all { font-size: 13px; color: #7c3aed; cursor: pointer; text-decoration: none; }
+
+  .courses-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+  }
+  .course-card {
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(99,102,241,0.2);
+    border-radius: 14px;
+    overflow: hidden;
+    cursor: pointer;
+    transition: transform 0.2s, border-color 0.2s;
+  }
+  .course-card:hover { transform: translateY(-3px); border-color: rgba(124,58,237,0.5); }
+  .course-thumb {
+    height: 90px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 32px;
+  }
+  .course-info { padding: 0.75rem; }
+  .course-subject { font-size: 11px; color: #64748b; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+  .course-name { font-size: 13px; font-weight: 600; color: #e2e8f0; margin: 2px 0 8px; }
+  .progress-bar { height: 3px; background: rgba(255,255,255,0.1); border-radius: 4px; overflow: hidden; }
+  .progress-fill { height: 100%; border-radius: 4px; }
+  .progress-label { font-size: 10px; color: #64748b; margin-top: 4px; }
+  .play-btn {
+    width: 28px; height: 28px;
+    background: rgba(124,58,237,0.8);
+    border-radius: 50%;
+    border: none;
+    color: white;
+    cursor: pointer;
+    font-size: 10px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .course-footer { display: flex; align-items: center; justify-content: space-between; margin-top: 8px; }
+
+  /* BOTTOM GRID */
+  .bottom-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+  }
+
+  /* QUOTE CARD */
+  .quote-card {
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(99,102,241,0.2);
+    border-radius: 16px;
+    padding: 1.5rem;
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+  .quote-mark {
+    font-size: 60px;
+    color: rgba(124,58,237,0.2);
+    line-height: 0.6;
+    margin-bottom: 12px;
+    font-family: Georgia, serif;
+  }
+  .quote-text { font-size: 15px; color: #c4b5fd; font-style: italic; line-height: 1.6; margin-bottom: 10px; }
+  .quote-author { font-size: 12px; color: #7c3aed; font-weight: 600; }
+
+  /* INSIGHTS CARD */
+  .insights-card {
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(99,102,241,0.2);
+    border-radius: 16px;
+    padding: 1.25rem;
+  }
+  .insights-card h3 { font-size: 15px; font-weight: 600; color: #f1f5f9; margin-bottom: 1rem; }
+  .insight-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px;
+    border-radius: 10px;
+    background: rgba(255,255,255,0.03);
+    margin-bottom: 8px;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+  .insight-item:hover { background: rgba(124,58,237,0.1); }
+  .insight-icon { font-size: 20px; }
+  .insight-text { flex: 1; }
+  .insight-title { font-size: 13px; font-weight: 500; color: #e2e8f0; }
+  .insight-sub { font-size: 11px; color: #64748b; margin-top: 2px; }
+
+  /* BADGES */
+  .badges-card {
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(99,102,241,0.2);
+    border-radius: 16px;
+    padding: 1.25rem;
+  }
+  .badges-card h3 { font-size: 15px; font-weight: 600; color: #f1f5f9; margin-bottom: 1rem; }
+  .badges-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .badge-item {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(99,102,241,0.2);
+    border-radius: 12px;
+    padding: 12px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .badge-item:hover { background: rgba(124,58,237,0.15); border-color: rgba(124,58,237,0.4); }
+  .badge-icon {
+    width: 44px; height: 44px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 6px;
+    font-size: 20px;
+  }
+  .badge-name { font-size: 11px; font-weight: 600; color: #e2e8f0; }
+  .badge-desc { font-size: 10px; color: #64748b; margin-top: 2px; }
+
+  /* WEEKLY GOAL */
+  .goal-section {
+    display: grid;
+    grid-template-columns: 1fr 280px;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+  }
+
+  /* ANALYTICS */
+  .analytics-card {
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(99,102,241,0.2);
+    border-radius: 16px;
+    padding: 1.25rem;
+  }
+  .analytics-card h3 { font-size: 15px; font-weight: 600; color: #f1f5f9; margin-bottom: 1rem; }
+
+  /* WEEKLY GOAL CARD */
+  .weekly-goal-card {
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(99,102,241,0.2);
+    border-radius: 16px;
+    padding: 1.25rem;
+  }
+  .weekly-goal-card h3 { font-size: 15px; font-weight: 600; color: #f1f5f9; margin-bottom: 0.5rem; }
+  .goal-hours { font-size: 32px; font-weight: 700; color: #f1f5f9; }
+  .goal-hours span { font-size: 15px; color: #64748b; font-weight: 400; }
+  .goal-bar { height: 6px; background: rgba(255,255,255,0.08); border-radius: 6px; overflow: hidden; margin: 1rem 0 0.5rem; }
+  .goal-fill { height: 100%; background: linear-gradient(90deg, #7c3aed, #3b82f6); border-radius: 6px; width: 70%; }
+  .goal-msg { font-size: 12px; color: #10b981; }
+
+  /* STREAK */
+  .streak-card {
+    background: linear-gradient(135deg, rgba(245,158,11,0.1), rgba(239,68,68,0.08));
+    border: 1px solid rgba(245,158,11,0.25);
+    border-radius: 16px;
+    padding: 1.25rem;
+    text-align: center;
+  }
+  .streak-num { font-size: 48px; font-weight: 700; color: #f59e0b; line-height: 1; }
+  .streak-label { font-size: 13px; color: #94a3b8; margin-top: 4px; }
+  .streak-graph { height: 40px; display: flex; align-items: flex-end; gap: 3px; margin-top: 12px; justify-content: center; }
+  .streak-bar { width: 18px; border-radius: 3px 3px 0 0; background: rgba(245,158,11,0.3); transition: height 0.5s ease; }
+  .streak-bar.active { background: linear-gradient(180deg, #f59e0b, #ef4444); }
+
+  /* AGENTS ROW */
+  .agents-section { margin-bottom: 1.5rem; }
+  .agents-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 10px;
+  }
+  .agent-card {
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(99,102,241,0.2);
+    border-radius: 14px;
+    padding: 1rem;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .agent-card:hover { background: rgba(124,58,237,0.1); border-color: rgba(124,58,237,0.4); transform: translateY(-2px); }
+  .agent-icon {
+    width: 44px; height: 44px;
+    border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 8px;
+    font-size: 20px;
+  }
+  .agent-name { font-size: 12px; font-weight: 600; color: #e2e8f0; }
+  .agent-status { font-size: 10px; color: #10b981; margin-top: 3px; }
+  .status-dot { display: inline-block; width: 6px; height: 6px; background: #10b981; border-radius: 50%; margin-right: 4px; animation: pulse 2s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+
+  /* CALENDAR */
+  .calendar-card {
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(99,102,241,0.2);
+    border-radius: 14px;
+    padding: 1.1rem;
+  }
+  .cal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+  .cal-title { font-size: 13px; font-weight: 600; color: #f1f5f9; }
+  .cal-nav { background: none; border: none; color: #64748b; cursor: pointer; font-size: 16px; padding: 2px 6px; }
+  .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; text-align: center; }
+  .cal-day-label { font-size: 10px; color: #64748b; font-weight: 600; padding: 2px; }
+  .cal-day {
+    font-size: 11px;
+    color: #94a3b8;
+    padding: 4px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .cal-day:hover { background: rgba(124,58,237,0.2); color: #c4b5fd; }
+  .cal-day.today {
+    background: #7c3aed;
+    color: white;
+    font-weight: 700;
+    border-radius: 50%;
+  }
+  .cal-day.has-event { position: relative; }
+  .cal-day.has-event::after {
+    content: '';
+    width: 4px; height: 4px;
+    background: #10b981;
+    border-radius: 50%;
+    position: absolute;
+    bottom: 0; left: 50%; transform: translateX(-50%);
+  }
+  .cal-day.empty { color: transparent; cursor: default; }
+
+  /* XP BAR */
+  .xp-section {
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(99,102,241,0.2);
+    border-radius: 14px;
+    padding: 1rem 1.25rem;
+    margin-bottom: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+  }
+  .xp-info { flex: 1; }
+  .xp-label { font-size: 12px; color: #64748b; margin-bottom: 6px; }
+  .xp-bar { height: 10px; background: rgba(255,255,255,0.08); border-radius: 10px; overflow: hidden; }
+  .xp-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #7c3aed, #a855f7, #3b82f6);
+    border-radius: 10px;
+    width: 72%;
+    position: relative;
+  }
+  .xp-fill::after {
+    content: '';
+    position: absolute; right: 0; top: 50%; transform: translateY(-50%);
+    width: 12px; height: 12px;
+    background: white;
+    border-radius: 50%;
+    box-shadow: 0 0 6px rgba(124,58,237,0.8);
+  }
+  .level-badge {
+    background: linear-gradient(135deg, #7c3aed, #3b82f6);
+    border-radius: 10px;
+    padding: 8px 16px;
+    text-align: center;
+  }
+  .level-num { font-size: 22px; font-weight: 700; color: white; }
+  .level-label { font-size: 10px; color: rgba(255,255,255,0.7); }
+  .xp-points { font-size: 12px; color: #a78bfa; margin-top: 4px; }
+
+  /* RESPONSIVE */
+  @media (max-width: 1100px) {
+    .stats-row { grid-template-columns: repeat(2, 1fr); }
+    .courses-grid { grid-template-columns: repeat(2, 1fr); }
+    .agents-grid { grid-template-columns: repeat(3, 1fr); }
+    .bottom-grid { grid-template-columns: 1fr 1fr; }
+    .goal-section { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 768px) {
+    .sidebar { display: none; }
+    .stats-row { grid-template-columns: repeat(2, 1fr); }
+    .mid-grid { grid-template-columns: 1fr; }
+    .courses-grid { grid-template-columns: repeat(2, 1fr); }
+    .bottom-grid { grid-template-columns: 1fr; }
+    .agents-grid { grid-template-columns: repeat(3, 1fr); }
+  }
+
+  /* SCROLLABLE MAIN */
+  .main-scroll { overflow-y: auto; flex: 1; }
+</style>
+</head>
+<body>
+<h2 class="sr-only" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)">EduAI — Personalized Learning Dashboard with AI tutor, progress analytics, focus mode, and gamification</h2>
+
+<div class="layout">
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="logo">
+      <div class="logo-icon">🎓</div>
+      EduAI
+    </div>
+    <nav>
+      <div class="nav-item active" onclick="setNav(this)">🏠 <span>Home</span></div>
+      <div class="nav-item" onclick="setNav(this)">📚 <span>Learn</span></div>
+      <div class="nav-item" onclick="setNav(this)">🤖 <span>AI Tutor</span></div>
+      <div class="nav-item" onclick="setNav(this)">📝 <span>Quizzes</span></div>
+      <div class="nav-item" onclick="setNav(this)">📓 <span>Notes</span></div>
+      <div class="nav-item" onclick="setNav(this)">🧪 <span>Mock Tests</span></div>
+      <div class="nav-item" onclick="setNav(this)">📊 <span>Progress</span></div>
+      <div class="nav-item" onclick="setNav(this)">🔖 <span>Bookmarks</span></div>
+      <div class="nav-item" onclick="setNav(this)">👥 <span>Community</span></div>
+      <div class="nav-item" onclick="setNav(this)">⚙️ <span>Settings</span></div>
+    </nav>
+    <div class="upgrade-card">
+      <h4>Upgrade to Pro</h4>
+      <p>Unlock unlimited AI features, mocks & more.</p>
+      <button class="upgrade-btn">Upgrade Now →</button>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <div class="main">
+    <!-- TOPBAR -->
+    <div class="topbar">
+      <div class="search-bar">🔍 Search for lessons, notes, quizzes...</div>
+      <div class="topbar-right">
+        <div class="notif-btn">🔔<span class="notif-dot"></span></div>
+        <div class="avatar">F</div>
+      </div>
+    </div>
+
+    <!-- CONTENT -->
+    <div class="main-scroll">
+    <div class="content">
+
+      <!-- GREETING -->
+      <div class="greeting">
+        <h1>Good morning, Farhan! 🌟</h1>
+        <p>Let's make today's learning amazing</p>
+      </div>
+
+      <!-- XP BAR -->
+      <div class="xp-section">
+        <div class="level-badge">
+          <div class="level-num">12</div>
+          <div class="level-label">LEVEL</div>
+        </div>
+        <div class="xp-info">
+          <div class="xp-label">Scholar Rank — 3,600 / 5,000 XP to next level</div>
+          <div class="xp-bar"><div class="xp-fill"></div></div>
+          <div class="xp-points">+120 XP earned today 🔥</div>
+        </div>
+        <div style="text-align:center;">
+          <div style="font-size:28px;">🔥</div>
+          <div style="font-size:13px;font-weight:700;color:#f59e0b;">7 Day</div>
+          <div style="font-size:11px;color:#64748b;">Streak</div>
+        </div>
+      </div>
+
+      <!-- STATS -->
+      <div class="stats-row">
+        <div class="stat-card blue">
+          <div class="stat-label">Study Hours</div>
+          <div class="stat-value">4.6<span style="font-size:16px;color:#64748b;"> hrs</span></div>
+          <div class="stat-sub">+12% from yesterday</div>
+          <div class="stat-icon blue">⏱️</div>
+          <div style="margin-top:8px;height:30px;position:relative;overflow:hidden;">
+            <canvas id="miniChart1" height="30"></canvas>
+          </div>
+        </div>
+        <div class="stat-card purple">
+          <div class="stat-label">Lessons Completed</div>
+          <div class="stat-value">12</div>
+          <div class="stat-sub">+3 from yesterday</div>
+          <div class="stat-icon purple">📖</div>
+          <div style="margin-top:8px;height:4px;background:rgba(255,255,255,0.08);border-radius:4px;overflow:hidden;">
+            <div style="width:80%;height:100%;background:linear-gradient(90deg,#7c3aed,#a855f7);border-radius:4px;"></div>
+          </div>
+        </div>
+        <div class="stat-card green">
+          <div class="stat-label">AI Accuracy</div>
+          <div class="stat-value">92<span style="font-size:16px;color:#64748b;">%</span></div>
+          <div class="stat-sub">Your AI performance</div>
+          <div class="stat-icon green">🎯</div>
+          <div style="margin-top:8px;display:flex;align-items:center;gap:6px;">
+            <div style="flex:1;height:4px;background:rgba(255,255,255,0.08);border-radius:4px;overflow:hidden;">
+              <div style="width:92%;height:100%;background:linear-gradient(90deg,#10b981,#06b6d4);border-radius:4px;"></div>
+            </div>
+            <span style="font-size:10px;color:#10b981;">92%</span>
+          </div>
+        </div>
+        <div class="stat-card amber" style="position:relative;">
+          <div style="position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,#7c3aed,#4f46e5);border-radius:14px 14px 0 0;"></div>
+          <div class="stat-label">Calendar</div>
+          <div style="font-size:13px;font-weight:600;color:#f1f5f9;margin-bottom:6px;">May 2024</div>
+          <div style="display:flex;justify-content:space-between;font-size:9px;color:#64748b;margin-bottom:4px;">
+            <span>S</span><span>M</span><span>T</span><span>W</span><span>T</span><span>F</span><span>S</span>
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:1px;font-size:9px;text-align:center;">
+            <span style="color:transparent">·</span><span style="color:transparent">·</span><span style="color:transparent">·</span><span style="color:transparent">·</span><span style="color:#94a3b8">1</span><span style="color:#94a3b8">2</span><span style="color:#94a3b8">3</span>
+            <span style="color:#94a3b8">4</span><span style="color:#94a3b8">5</span><span style="color:#94a3b8">6</span><span style="color:#94a3b8">7</span><span style="color:#94a3b8">8</span><span style="color:#94a3b8">9</span><span style="color:#94a3b8">10</span>
+            <span style="color:#94a3b8">11</span><span style="color:#94a3b8">12</span><span style="color:#94a3b8">13</span><span style="color:#94a3b8">14</span><span style="color:#94a3b8">15</span><span style="color:#94a3b8">16</span><span style="color:#94a3b8">17</span>
+            <span style="color:#94a3b8">18</span><span style="color:#94a3b8">19</span><span style="color:#94a3b8">20</span><span style="color:#94a3b8">21</span><span style="color:#94a3b8">22</span><span style="color:#94a3b8">23</span><span style="color:#94a3b8">24</span>
+            <span style="background:#7c3aed;color:white;border-radius:50%;padding:1px;font-weight:700;">25</span><span style="color:#94a3b8">26</span><span style="color:#94a3b8">27</span><span style="color:#94a3b8">28</span><span style="color:#94a3b8">29</span><span style="color:#94a3b8">30</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- MID: AI TUTOR + FOCUS -->
+      <div class="mid-grid">
+        <div class="ai-tutor-card">
+          <div class="ai-robot">
+            <div class="robot-body">
+              <div class="robot-face">
+                <div class="robot-eye"></div>
+                <div class="robot-eye"></div>
+              </div>
+            </div>
+          </div>
+          <div class="ai-tutor-info" style="flex:1;">
+            <h2>Meet your AI Tutor! <span class="ai-badge">Beta</span></h2>
+            <p>Ask anything. Get explanations, solve doubts, and learn smarter. ✨</p>
+            <button class="start-btn">▶ Start a conversation</button>
+          </div>
+          <div class="ai-prompt-chips">
+            <div class="chip">💡 Explain Newton's Laws</div>
+            <div class="chip">🔢 Solve this step by step</div>
+            <div class="chip">📝 Quiz me on this topic</div>
+          </div>
+        </div>
+
+        <div class="focus-card">
+          <h3>Focus Mode</h3>
+          <p>Stay focused. Eliminate distractions.</p>
+          <div class="timer-display" id="timerDisplay">25:00</div>
+          <div class="timer-progress"><div class="timer-progress-bar" id="timerBar" style="width:100%"></div></div>
+          <button class="timer-btn" id="timerBtn" onclick="toggleTimer()">▶</button>
+          <div class="sound-label">Select ambient sound</div>
+          <div class="sound-btns">
+            <button class="sound-btn" onclick="toggleSound(this)">🎵</button>
+            <button class="sound-btn" onclick="toggleSound(this)">🌧️</button>
+            <button class="sound-btn active" onclick="toggleSound(this)">🌲</button>
+            <button class="sound-btn" onclick="toggleSound(this)">☕</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- AGENTS -->
+      <div class="agents-section">
+        <div class="section-header">
+          <div class="section-title">🤖 AI Agent Network</div>
+          <span class="view-all">All Agents →</span>
+        </div>
+        <div class="agents-grid">
+          <div class="agent-card">
+            <div class="agent-icon" style="background:rgba(124,58,237,0.15);">🧑‍🏫</div>
+            <div class="agent-name">Tutor Agent</div>
+            <div class="agent-status"><span class="status-dot"></span>Active</div>
+          </div>
+          <div class="agent-card">
+            <div class="agent-icon" style="background:rgba(239,68,68,0.15);">🔍</div>
+            <div class="agent-name">Weakness Detector</div>
+            <div class="agent-status"><span class="status-dot"></span>Scanning</div>
+          </div>
+          <div class="agent-card">
+            <div class="agent-icon" style="background:rgba(16,185,129,0.15);">🗺️</div>
+            <div class="agent-name">Recommender</div>
+            <div class="agent-status"><span class="status-dot"></span>Ready</div>
+          </div>
+          <div class="agent-card">
+            <div class="agent-icon" style="background:rgba(245,158,11,0.15);">📋</div>
+            <div class="agent-name">Exam Engine</div>
+            <div class="agent-status"><span class="status-dot"></span>Ready</div>
+          </div>
+          <div class="agent-card">
+            <div class="agent-icon" style="background:rgba(59,130,246,0.15);">✅</div>
+            <div class="agent-name">Verifier</div>
+            <div class="agent-status"><span class="status-dot"></span>Verifying</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- CONTINUE LEARNING -->
+      <div class="section-header">
+        <div class="section-title">Continue Learning</div>
+        <span class="view-all">View All →</span>
+      </div>
+      <div class="courses-grid">
+        <div class="course-card">
+          <div class="course-thumb" style="background:linear-gradient(135deg,#1e1b4b,#312e81);">🪐</div>
+          <div class="course-info">
+            <div class="course-subject">Physics</div>
+            <div class="course-name">Laws of Motion</div>
+            <div class="progress-bar"><div class="progress-fill" style="width:75%;background:linear-gradient(90deg,#3b82f6,#06b6d4);"></div></div>
+            <div class="course-footer">
+              <div class="progress-label">75% Completed</div>
+              <button class="play-btn">▶</button>
+            </div>
+          </div>
+        </div>
+        <div class="course-card">
+          <div class="course-thumb" style="background:linear-gradient(135deg,#0c4a6e,#164e63);">⚗️</div>
+          <div class="course-info">
+            <div class="course-subject">Chemistry</div>
+            <div class="course-name">Chemical Bonding</div>
+            <div class="progress-bar"><div class="progress-fill" style="width:50%;background:linear-gradient(90deg,#06b6d4,#10b981);"></div></div>
+            <div class="course-footer">
+              <div class="progress-label">50% Completed</div>
+              <button class="play-btn">▶</button>
+            </div>
+          </div>
+        </div>
+        <div class="course-card">
+          <div class="course-thumb" style="background:linear-gradient(135deg,#14532d,#166534);">📐</div>
+          <div class="course-info">
+            <div class="course-subject">Math</div>
+            <div class="course-name">Linear Equations</div>
+            <div class="progress-bar"><div class="progress-fill" style="width:90%;background:linear-gradient(90deg,#10b981,#22c55e);"></div></div>
+            <div class="course-footer">
+              <div class="progress-label">90% Completed</div>
+              <button class="play-btn">▶</button>
+            </div>
+          </div>
+        </div>
+        <div class="course-card">
+          <div class="course-thumb" style="background:linear-gradient(135deg,#451a03,#78350f);">📖</div>
+          <div class="course-info">
+            <div class="course-subject">English</div>
+            <div class="course-name">Tenses & Grammar</div>
+            <div class="progress-bar"><div class="progress-fill" style="width:40%;background:linear-gradient(90deg,#f59e0b,#ef4444);"></div></div>
+            <div class="course-footer">
+              <div class="progress-label">40% Completed</div>
+              <button class="play-btn">▶</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ANALYTICS + WEEKLY GOAL -->
+      <div class="goal-section" style="margin-top:1.5rem;">
+        <div class="analytics-card">
+          <h3>Learning Analytics</h3>
+          <div style="position:relative;height:180px;">
+            <canvas id="analyticsChart" role="img" aria-label="Weekly learning hours bar chart">Study hours this week</canvas>
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:1rem;">
+          <div class="weekly-goal-card">
+            <h3>Weekly Goal</h3>
+            <div class="goal-hours">28<span>/40 hrs</span></div>
+            <div class="goal-bar"><div class="goal-fill"></div></div>
+            <div class="goal-msg">You're doing great! 🔥</div>
+          </div>
+          <div class="streak-card">
+            <div class="streak-num">7</div>
+            <div class="streak-label">Day Streak 🔥</div>
+            <div class="streak-graph" id="streakGraph"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- BOTTOM: QUOTE + INSIGHTS + BADGES -->
+      <div class="bottom-grid">
+        <div class="quote-card">
+          <div class="quote-mark">"</div>
+          <div class="quote-text">Education is not the learning of facts, but the training of the mind to think.</div>
+          <div class="quote-author">— Albert Einstein</div>
+          <div style="position:absolute;bottom:0;right:0;font-size:60px;opacity:0.05;line-height:1;">"</div>
+        </div>
+
+        <div class="insights-card">
+          <h3>💡 Smart Insights</h3>
+          <div class="insight-item">
+            <div class="insight-icon">☀️</div>
+            <div class="insight-text">
+              <div class="insight-title">You learn best in the morning</div>
+              <div class="insight-sub">Keep it up! 🔥</div>
+            </div>
+          </div>
+          <div class="insight-item">
+            <div class="insight-icon">🏆</div>
+            <div class="insight-text">
+              <div class="insight-title">Your strong subject is Math</div>
+              <div class="insight-sub">Accuracy 92%</div>
+            </div>
+          </div>
+          <div class="insight-item">
+            <div class="insight-icon">⚠️</div>
+            <div class="insight-text">
+              <div class="insight-title">Weak area: Organic Chemistry</div>
+              <div class="insight-sub">AI remedial plan ready</div>
+            </div>
+          </div>
+          <div class="insight-item">
+            <div class="insight-icon">📅</div>
+            <div class="insight-text">
+              <div class="insight-title">Mock exam in 3 days</div>
+              <div class="insight-sub">Physics — Newton's Laws</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="badges-card">
+          <h3>🏅 Badges</h3>
+          <div class="badges-grid">
+            <div class="badge-item">
+              <div class="badge-icon" style="background:rgba(16,185,129,0.2);">🎯</div>
+              <div class="badge-name">Consistent</div>
+              <div class="badge-desc">7 Days</div>
+            </div>
+            <div class="badge-item">
+              <div class="badge-icon" style="background:rgba(6,182,212,0.2);">⚡</div>
+              <div class="badge-name">Quick Learner</div>
+              <div class="badge-desc">Score 90%+</div>
+            </div>
+            <div class="badge-item">
+              <div class="badge-icon" style="background:rgba(124,58,237,0.2);">🤖</div>
+              <div class="badge-name">AI Explorer</div>
+              <div class="badge-desc">10+ Chats</div>
+            </div>
+            <div class="badge-item">
+              <div class="badge-icon" style="background:rgba(245,158,11,0.2);">📝</div>
+              <div class="badge-name">Quiz Master</div>
+              <div class="badge-desc">5 Quizzes</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div style="height:2rem;"></div>
+    </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script>
+  // NAV
+  function setNav(el) {
+    document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+    el.classList.add('active');
+  }
+
+  // TIMER
+  let timerRunning = false;
+  let totalSecs = 25 * 60;
+  let remaining = totalSecs;
+  let timerInterval = null;
+
+  function updateTimerDisplay() {
+    const m = Math.floor(remaining / 60);
+    const s = remaining % 60;
+    document.getElementById('timerDisplay').textContent =
+      String(m).padStart(2,'0') + ':' + String(s).padStart(2,'0');
+    document.getElementById('timerBar').style.width = Math.round((remaining/totalSecs)*100) + '%';
+  }
+
+  function toggleTimer() {
+    timerRunning = !timerRunning;
+    document.getElementById('timerBtn').textContent = timerRunning ? '⏸' : '▶';
+    if (timerRunning) {
+      timerInterval = setInterval(() => {
+        if (remaining > 0) {
+          remaining--;
+          updateTimerDisplay();
+        } else {
+          clearInterval(timerInterval);
+          timerRunning = false;
+          document.getElementById('timerBtn').textContent = '▶';
+          remaining = totalSecs;
+          updateTimerDisplay();
+        }
+      }, 1000);
+    } else {
+      clearInterval(timerInterval);
+    }
+  }
+
+  function toggleSound(btn) {
+    document.querySelectorAll('.sound-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+  }
+
+  // STREAK BARS
+  const heights = [20, 35, 45, 30, 50, 40, 60];
+  const streakGraph = document.getElementById('streakGraph');
+  heights.forEach((h, i) => {
+    const bar = document.createElement('div');
+    bar.className = 'streak-bar' + (i === 6 ? ' active' : (i >= 3 ? ' active' : ''));
+    bar.style.height = h + 'px';
+    streakGraph.appendChild(bar);
+  });
+  // All active for 7-day streak
+  document.querySelectorAll('.streak-bar').forEach(b => b.classList.add('active'));
+
+  // ANALYTICS CHART
+  const ctx = document.getElementById('analyticsChart').getContext('2d');
+  new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+      datasets: [{
+        label: 'Study Hours',
+        data: [3.5, 4.2, 5.1, 3.8, 4.6, 6.0, 4.8],
+        backgroundColor: [
+          'rgba(124,58,237,0.4)',
+          'rgba(124,58,237,0.4)',
+          'rgba(124,58,237,0.4)',
+          'rgba(124,58,237,0.4)',
+          'rgba(59,130,246,0.8)',
+          'rgba(124,58,237,0.4)',
+          'rgba(124,58,237,0.4)',
+        ],
+        borderColor: 'rgba(124,58,237,0.8)',
+        borderWidth: 1,
+        borderRadius: 6,
+        hoverBackgroundColor: 'rgba(167,139,250,0.7)',
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            label: ctx => ctx.parsed.y.toFixed(1) + ' hrs'
+          }
+        }
+      },
+      scales: {
+        x: {
+          grid: { color: 'rgba(255,255,255,0.05)' },
+          ticks: { color: '#64748b', font: { size: 11 } }
+        },
+        y: {
+          grid: { color: 'rgba(255,255,255,0.05)' },
+          ticks: { color: '#64748b', font: { size: 11 }, callback: v => v + 'h' },
+          max: 8
+        }
+      }
+    }
+  });
+</script>
+</body>
+</html>
